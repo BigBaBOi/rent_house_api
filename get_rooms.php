@@ -1,10 +1,38 @@
 <?php
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Headers: Content-Type, Accept");
+header("Access-Control-Allow-Methods: GET, OPTIONS");
+header("Content-Type: application/json; charset=UTF-8");
 
-require_once __DIR__ . '/utils/AuthHelper.php';
-require_once __DIR__ . '/controllers/RoomController.php';
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
 
-AuthHelper::setUpCors();
+$servername = "localhost";
+$username   = "root";
+$password   = "";
+$dbname     = "rent_house";
 
 $hostelId = $_GET['hostel_id'] ?? null;
-$controller = new RoomController();
-$controller->getRooms($hostelId);
+
+try {
+    $conn = new PDO("mysql:host=$servername;dbname=$dbname;charset=utf8", $username, $password);
+    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    
+    if ($hostelId) {
+        $stmt = $conn->prepare("SELECT * FROM Rooms WHERE hostel_id = ?");
+        $stmt->execute([$hostelId]);
+    } else {
+        $stmt = $conn->prepare("SELECT * FROM Rooms");
+        $stmt->execute();
+    }
+    
+    $rooms = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    echo json_encode(["status" => "success", "data" => $rooms]);
+    
+} catch(PDOException $e) {
+    echo json_encode(["status" => "error", "message" => "Connection failed: " . $e->getMessage()]);
+}
+?>
