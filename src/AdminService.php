@@ -1,0 +1,90 @@
+<?php
+class AdminService {
+    private $conn;
+    private $ownerVerificationService;
+
+    public function __construct(PDO $conn, OwnerVerificationService $ownerVerificationService) {
+        $this->conn = $conn;
+        $this->ownerVerificationService = $ownerVerificationService;
+    }
+
+    /**
+     * Duyệt xác thực chủ trọ
+     */
+    public function approveOwnerVerification(string $verifyId, string $adminId, string $reviewNote = ''): array {
+        try {
+            $updated = $this->ownerVerificationService->updateVerificationStatus(
+                $verifyId,
+                'approved',
+                $reviewNote,
+                $adminId
+            );
+
+            if (!$updated) {
+                return [
+                    'status' => 'error',
+                    'message' => 'Không thể cập nhật xác thực này'
+                ];
+            }
+
+            return [
+                'status' => 'success',
+                'message' => 'Đã duyệt xác thực chủ trọ'
+            ];
+        } catch (Exception $e) {
+            return [
+                'status' => 'error',
+                'message' => 'Lỗi: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Từ chối xác thực chủ trọ
+     */
+    public function rejectOwnerVerification(string $verifyId, string $adminId, string $reviewNote = ''): array {
+        try {
+            $updated = $this->ownerVerificationService->updateVerificationStatus(
+                $verifyId,
+                'rejected',
+                $reviewNote,
+                $adminId
+            );
+
+            if (!$updated) {
+                return [
+                    'status' => 'error',
+                    'message' => 'Không thể cập nhật xác thực này'
+                ];
+            }
+
+            return [
+                'status' => 'success',
+                'message' => 'Đã từ chối xác thực chủ trọ'
+            ];
+        } catch (Exception $e) {
+            return [
+                'status' => 'error',
+                'message' => 'Lỗi: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Lấy danh sách chủ trọ chờ xác thực
+     */
+    public function getPendingOwnerVerifications(int $limit = 50, int $offset = 0): array {
+        return $this->ownerVerificationService->getPendingVerifications($limit, $offset);
+    }
+
+    /**
+     * Kiểm tra quyền admin
+     */
+    public function isAdmin(string $userId): bool {
+        $stmt = $this->conn->prepare('SELECT role FROM Users WHERE user_id = ?');
+        $stmt->execute([$userId]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        return $user && $user['role'] === 'admin';
+    }
+}

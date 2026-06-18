@@ -11,6 +11,9 @@ require_once __DIR__ . '/src/Database.php';
 require_once __DIR__ . '/src/Request.php';
 require_once __DIR__ . '/src/Response.php';
 require_once __DIR__ . '/src/ResourceRepository.php';
+require_once __DIR__ . '/src/OwnerVerificationService.php';
+require_once __DIR__ . '/src/UserRegistrationService.php';
+require_once __DIR__ . '/src/AdminService.php';
 require_once __DIR__ . '/src/ApiController.php';
 
 $request = new Request();

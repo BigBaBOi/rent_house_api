@@ -3,11 +3,32 @@ class ApiController {
     private $db;
     private $request;
     private $resourceRepository;
+    private $userRegistrationService;
+    private $ownerVerificationService;
+    private $adminService;
 
-    public function __construct(Database $db, Request $request, ResourceRepository $resourceRepository) {
+    public function __construct(
+        Database $db,
+        Request $request,
+        ResourceRepository $resourceRepository,
+        ?UserRegistrationService $userRegistrationService = null,
+        ?OwnerVerificationService $ownerVerificationService = null,
+        ?AdminService $adminService = null
+    ) {
         $this->db = $db;
         $this->request = $request;
         $this->resourceRepository = $resourceRepository;
+        
+        if ($userRegistrationService === null || $ownerVerificationService === null || $adminService === null) {
+            $conn = $db->getConnection();
+            $this->ownerVerificationService = $ownerVerificationService ?? new OwnerVerificationService($conn);
+            $this->userRegistrationService = $userRegistrationService ?? new UserRegistrationService($conn, $this->ownerVerificationService);
+            $this->adminService = $adminService ?? new AdminService($conn, $this->ownerVerificationService);
+        } else {
+            $this->userRegistrationService = $userRegistrationService;
+            $this->ownerVerificationService = $ownerVerificationService;
+            $this->adminService = $adminService;
+        }
     }
 
     public function handle() {
@@ -52,6 +73,15 @@ class ApiController {
             case 'login_user':
                 $this->loginUser($data, $conn);
                 break;
+            case 'verify_owner':
+                $this->verifyOwner($data, $conn);
+                break;
+            case 'reject_owner':
+                $this->rejectOwner($data, $conn);
+                break;
+            case 'get_pending_owners':
+                $this->getPendingOwners($data, $conn);
+                break;
             default:
                 Response::json(['status' => 'error', 'message' => 'Action không hợp lệ'], 400);
         }
@@ -59,26 +89,12 @@ class ApiController {
 
     private function registerUser(array $data, PDO $conn) {
         try {
-            $userId = uniqid('USER_');
-            $hashedPassword = password_hash($data['password'], PASSWORD_DEFAULT);
-
-            $stmt = $conn->prepare(
-                'INSERT INTO Users (user_id, email, password_hash, full_name, phone_number, role) VALUES (?, ?, ?, ?, ?, ?)'
-            );
-            $stmt->execute([
-                $userId,
-                $data['email'],
-                $hashedPassword,
-                $data['full_name'],
-                $data['phone_number'],
-                $data['role'] ?? 'tenant'
-            ]);
-
-            Response::json(['status' => 'success', 'message' => 'Đăng ký thành công!', 'user_id' => $userId], 201);
+            $result = $this->userRegistrationService->register($data);
+            $code = $result['verification_status'] === 'pending_verification' ? 202 : 201;
+            Response::json($result, $code);
+        } catch (InvalidArgumentException $e) {
+            Response::json(['status' => 'error', 'message' => $e->getMessage()], 409);
         } catch (PDOException $e) {
-            if ($e->getCode() == 23000) {
-                Response::json(['status' => 'error', 'message' => 'Email này đã được sử dụng!'], 409);
-            }
             Response::json(['status' => 'error', 'message' => 'Lỗi: ' . $e->getMessage()], 500);
         }
     }
@@ -96,6 +112,72 @@ class ApiController {
 
             Response::json(['status' => 'error', 'message' => 'Sai email hoặc mật khẩu!'], 401);
         } catch (PDOException $e) {
+            Response::json(['status' => 'error', 'message' => 'Lỗi: ' . $e->getMessage()], 500);
+        }
+    }
+
+    private function verifyOwner(array $data, PDO $conn) {
+        try {
+            if (!isset($data['admin_id']) || !isset($data['verify_id'])) {
+                Response::json(['status' => 'error', 'message' => 'Thiếu admin_id hoặc verify_id'], 400);
+            }
+
+            if (!$this->adminService->isAdmin($data['admin_id'])) {
+                Response::json(['status' => 'error', 'message' => 'Chỉ admin mới có quyền duyệt'], 403);
+            }
+
+            $result = $this->adminService->approveOwnerVerification(
+                $data['verify_id'],
+                $data['admin_id'],
+                $data['review_note'] ?? ''
+            );
+
+            $code = $result['status'] === 'error' ? 400 : 200;
+            Response::json($result, $code);
+        } catch (Exception $e) {
+            Response::json(['status' => 'error', 'message' => 'Lỗi: ' . $e->getMessage()], 500);
+        }
+    }
+
+    private function rejectOwner(array $data, PDO $conn) {
+        try {
+            if (!isset($data['admin_id']) || !isset($data['verify_id'])) {
+                Response::json(['status' => 'error', 'message' => 'Thiếu admin_id hoặc verify_id'], 400);
+            }
+
+            if (!$this->adminService->isAdmin($data['admin_id'])) {
+                Response::json(['status' => 'error', 'message' => 'Chỉ admin mới có quyền từ chối'], 403);
+            }
+
+            $result = $this->adminService->rejectOwnerVerification(
+                $data['verify_id'],
+                $data['admin_id'],
+                $data['review_note'] ?? ''
+            );
+
+            $code = $result['status'] === 'error' ? 400 : 200;
+            Response::json($result, $code);
+        } catch (Exception $e) {
+            Response::json(['status' => 'error', 'message' => 'Lỗi: ' . $e->getMessage()], 500);
+        }
+    }
+
+    private function getPendingOwners(array $data, PDO $conn) {
+        try {
+            if (!isset($data['admin_id'])) {
+                Response::json(['status' => 'error', 'message' => 'Thiếu admin_id'], 400);
+            }
+
+            if (!$this->adminService->isAdmin($data['admin_id'])) {
+                Response::json(['status' => 'error', 'message' => 'Chỉ admin mới có quyền xem'], 403);
+            }
+
+            $limit = $data['limit'] ?? 50;
+            $offset = $data['offset'] ?? 0;
+            
+            $pending = $this->adminService->getPendingOwnerVerifications($limit, $offset);
+            Response::json(['status' => 'success', 'data' => $pending], 200);
+        } catch (Exception $e) {
             Response::json(['status' => 'error', 'message' => 'Lỗi: ' . $e->getMessage()], 500);
         }
     }
