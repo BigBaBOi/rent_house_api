@@ -13,7 +13,7 @@ class ApiController {
     public function handle() {
         $method = $this->request->getMethod();
         $action = $this->request->getQuery('action');
-        $resource = strtolower($this->request->getQuery('resource')); 
+        $resource = strtolower($this->request->getQuery('resource') ?? ''); 
         $id = $this->request->getQuery('id');
 
         if ($method === 'OPTIONS') {
