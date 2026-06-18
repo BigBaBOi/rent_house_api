@@ -12,15 +12,18 @@ class OwnerVerificationService {
     public function createVerificationRequest(string $userId, array $ownerData): bool {
         try {
             $stmt = $this->conn->prepare(
-                'INSERT INTO OwnerVerifications (owner_id, id_card_front_url, id_card_back_url, status, created_at) 
-                 VALUES (?, ?, ?, ?, NOW())'
+                'INSERT INTO OwnerVerifications (owner_id, id_card_front_url, id_card_back_url, full_name_on_doc, id_number, business_license_url, status, created_at) 
+                 VALUES (?, ?, ?, ?, ?, ?, ?, NOW())'
             );
             
             $stmt->execute([
                 $userId,
                 $ownerData['id_card_front_url'] ?? null,
                 $ownerData['id_card_back_url'] ?? null,
-                'pending'
+                $ownerData['full_name_on_doc'] ?? null,
+                $ownerData['id_number'] ?? null,
+                $ownerData['business_license_url'] ?? null,
+                'Pending'
             ]);
 
             return true;
@@ -43,7 +46,7 @@ class OwnerVerificationService {
     /**
      * Cập nhật trạng thái xác thực (chỉ admin)
      */
-    public function updateVerificationStatus(string $verifyId, string $status, string $reviewNote = null, string $reviewedBy = null): bool {
+    public function updateVerificationStatus(string $verifyId, string $status, ?string $reviewNote = null, ?string $reviewedBy = null): bool {
         try {
             $stmt = $this->conn->prepare(
                 'UPDATE OwnerVerifications SET status = ?, review_note = ?, reviewed_by = ? WHERE verify_id = ?'
@@ -58,10 +61,10 @@ class OwnerVerificationService {
 
             if ($stmt->rowCount() > 0) {
                 // Nếu xác thực thành công, cập nhật user status
-                if ($status === 'approved') {
-                    $this->updateUserVerificationStatus($verifyId, 'verified');
-                } elseif ($status === 'rejected') {
-                    $this->updateUserVerificationStatus($verifyId, 'verification_failed');
+                if ($status === 'Approved') {
+                    $this->updateUserVerificationStatus($verifyId, 'Verified');
+                } elseif ($status === 'Rejected') {
+                    $this->updateUserVerificationStatus($verifyId, 'Unverified');
                 }
             }
 
@@ -95,12 +98,16 @@ class OwnerVerificationService {
             'SELECT ov.*, u.email, u.full_name, u.phone_number 
              FROM OwnerVerifications ov
              JOIN Users u ON ov.owner_id = u.user_id
-             WHERE ov.status = "pending"
+             WHERE ov.status = "Pending"
+               AND u.role = "owner"
+               AND u.verification_status = "Pending"
              ORDER BY ov.created_at ASC
-             LIMIT ? OFFSET ?'
+             LIMIT :limit OFFSET :offset'
         );
         
-        $stmt->execute([$limit, $offset]);
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }

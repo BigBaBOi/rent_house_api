@@ -230,6 +230,23 @@
 - `409 Conflict` - Email đã tồn tại
 - `500 Internal Server Error` - Lỗi server
 
+## Triển khai lên hosting
+
+- Nếu bạn upload code và database mới lên hosting thì chỉ cần giữ nguyên API contract.
+- Nếu app vẫn gọi trực tiếp `api.php` thì không cần sửa app.
+- Nếu app đang gọi URL root, bạn có thể thêm `index.php` đơn giản như sau:
+  ```php
+  <?php
+  require_once __DIR__ . '/api.php';
+  ```
+- Nếu host hoặc base URL thay đổi thì app cần cập nhật lại base URL mới.
+
+## Lưu ý cho app
+
+- App không cần thay đổi khi backend chỉ refactor nội bộ và giữ nguyên endpoints, query params, method và JSON payload.
+- App chỉ cần cập nhật khi bạn đổi endpoint (ví dụ từ `api.php` sang `index.php`) hoặc đổi domain của API.
+- Nếu bạn sử dụng `api.php` làm điểm vào, thì app sẽ gọi trực tiếp `https://yourdomain.xxx/api.php?...`.
+
 ## Cấu trúc file
 
 - `api.php` - điểm vào chính

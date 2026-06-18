@@ -15,7 +15,7 @@ class AdminService {
         try {
             $updated = $this->ownerVerificationService->updateVerificationStatus(
                 $verifyId,
-                'approved',
+                'Approved',
                 $reviewNote,
                 $adminId
             );
@@ -46,7 +46,7 @@ class AdminService {
         try {
             $updated = $this->ownerVerificationService->updateVerificationStatus(
                 $verifyId,
-                'rejected',
+                'Rejected',
                 $reviewNote,
                 $adminId
             );
@@ -85,6 +85,6 @@ class AdminService {
         $stmt->execute([$userId]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
         
-        return $user && $user['role'] === 'admin';
+        return $user && ($user['role'] === 'admin' || $user['role'] === 'SuperAdmin');
     }
 }

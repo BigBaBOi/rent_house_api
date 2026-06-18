@@ -46,7 +46,6 @@ try {
             JOIN hostels h ON r.hostel_id = h.hostel_id
             LEFT JOIN users u ON r.current_tenant_id = u.user_id
             WHERE r.current_tenant_id = :tenant_id
-            AND b.is_paid = 0 
             ORDER BY b.created_at DESC LIMIT 1
         ");
         $stmtBill->execute([':tenant_id' => $tenantId]);

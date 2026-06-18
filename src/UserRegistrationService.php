@@ -21,11 +21,11 @@ class UserRegistrationService {
             $role = $data['role'] ?? 'tenant';
             
             // Trạng thái xác thực mặc định
-            $verificationStatus = 'verified'; // Tenant tự động xác thực
+            $verificationStatus = 'Verified'; // Tenant tự động xác thực
             
             // Nếu đăng ký là chủ trọ, cần xác thực từ admin
-            if ($role === 'owner') {
-                $verificationStatus = 'pending_verification';
+            if (strtolower($role) === 'owner') {
+                $verificationStatus = 'Pending';
             }
 
             // Thêm user vào database
@@ -44,23 +44,28 @@ class UserRegistrationService {
                 $verificationStatus
             ]);
 
-            // Nếu là chủ trọ, tạo request xác thực
-            if ($role === 'owner') {
-                $this->ownerVerificationService->createVerificationRequest($userId, $data);
-                
+            $responseData = [
+                'user_id' => $userId,
+                'email' => $data['email'],
+                'full_name' => $data['full_name'],
+                'phone_number' => $data['phone_number'],
+                'role' => $role,
+                'verification_status' => $verificationStatus
+            ];
+
+            // Nếu là chủ trọ, báo về cần xác thực
+            if (strtolower($role) === 'owner') {
                 return [
                     'status' => 'success',
                     'message' => 'Đăng ký thành công! Vui lòng chờ admin xác thực tài khoản chủ trọ.',
-                    'user_id' => $userId,
-                    'verification_status' => 'pending_verification'
+                    'data' => $responseData
                 ];
             }
 
             return [
                 'status' => 'success',
                 'message' => 'Đăng ký thành công!',
-                'user_id' => $userId,
-                'verification_status' => 'verified'
+                'data' => $responseData
             ];
 
         } catch (PDOException $e) {
@@ -80,6 +85,33 @@ class UserRegistrationService {
         $stmt->execute([$userId]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
         
-        return $user && $user['verification_status'] === 'verified';
+        return $user && $user['verification_status'] === 'Verified';
+    }
+
+    /**
+     * Đổi mật khẩu
+     */
+    public function changePassword(string $userId, string $oldPassword, string $newPassword): array {
+        try {
+            $stmt = $this->conn->prepare('SELECT password_hash FROM Users WHERE user_id = ?');
+            $stmt->execute([$userId]);
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$user) {
+                return ['status' => 'error', 'message' => 'Người dùng không tồn tại!'];
+            }
+
+            if (!password_verify($oldPassword, $user['password_hash'])) {
+                return ['status' => 'error', 'message' => 'Mật khẩu cũ không chính xác!'];
+            }
+
+            $newHash = password_hash($newPassword, PASSWORD_DEFAULT);
+            $updateStmt = $this->conn->prepare('UPDATE Users SET password_hash = ? WHERE user_id = ?');
+            $updateStmt->execute([$newHash, $userId]);
+
+            return ['status' => 'success', 'message' => 'Đổi mật khẩu thành công!'];
+        } catch (PDOException $e) {
+            throw $e;
+        }
     }
 }
