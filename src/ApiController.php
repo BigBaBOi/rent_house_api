@@ -33,6 +33,8 @@ class ApiController {
             } else {
                 $this->handleResource($resource, $id, $method, $conn);
             }
+        } catch (InvalidArgumentException $e) {
+            Response::json(['status' => 'error', 'message' => $e->getMessage()], 400);
         } catch (PDOException $e) {
             Response::json(['status' => 'error', 'message' => 'Lỗi database: ' . $e->getMessage()], 500);
         } catch (Exception $e) {

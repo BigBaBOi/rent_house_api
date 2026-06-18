@@ -35,7 +35,7 @@ class Request {
 
         $decoded = json_decode($raw, true);
         if (json_last_error() !== JSON_ERROR_NONE) {
-            Response::json(['status' => 'error', 'message' => 'Invalid JSON payload'], 400);
+            throw new InvalidArgumentException('Invalid JSON payload');
         }
 
         $this->bodyData = $decoded;
