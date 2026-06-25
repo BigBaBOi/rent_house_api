@@ -9,7 +9,8 @@ class AdminService {
     }
 
     /**
-     * Duyệt xác thực chủ trọ
+     * ====== [FEATURE 3: ADMIN VERIFICATION APPROVAL] ======
+     * Duyệt xác thực chủ trọ - Admin phê duyệt yêu cầu xác thực
      */
     public function approveOwnerVerification(string $verifyId, string $adminId, string $reviewNote = ''): array {
         try {
@@ -40,7 +41,8 @@ class AdminService {
     }
 
     /**
-     * Từ chối xác thực chủ trọ
+     * ====== [FEATURE 3B: ADMIN VERIFICATION REJECTION] ======
+     * Từ chối xác thực chủ trọ - Admin có thể từ chối và yêu cầu cung cấp lại
      */
     public function rejectOwnerVerification(string $verifyId, string $adminId, string $reviewNote = ''): array {
         try {

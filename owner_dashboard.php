@@ -1,6 +1,6 @@
 <?php
 // Bật hiển thị lỗi để dễ debug dưới local
-ini_set('display_errors', 1);
+ini_set('display_errors', 0);
 error_reporting(E_ALL);
 
 header("Access-Control-Allow-Origin: *");

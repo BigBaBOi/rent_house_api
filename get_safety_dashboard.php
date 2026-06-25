@@ -1,4 +1,8 @@
 <?php
+// ====== [FEATURE 9: SAFETY DASHBOARD FOR OWNER] ======
+// Hiển thị dashboard an toàn: cảm biến, sự cố, thống kê báo động trong tháng
+// Query params: owner_id (bắt buộc)
+
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Headers: Content-Type, Accept");
 header("Access-Control-Allow-Methods: GET, OPTIONS");

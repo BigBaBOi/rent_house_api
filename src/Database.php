@@ -1,4 +1,8 @@
 <?php
+// ====== [CORE: DATABASE CONNECTION CLASS] ======
+// Singleton PDO connection để kết nối MySQL
+// Database: rent_house
+
 class Database {
     private $servername;
     private $username;

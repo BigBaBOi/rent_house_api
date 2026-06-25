@@ -1,4 +1,8 @@
 <?php
+// ====== [FEATURE 5: ROOM MANAGEMENT - GET ROOMS] ======
+// Lấy danh sách phòng (có thể lọc theo hostel_id)
+// Query params: hostel_id (optional)
+
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Headers: Content-Type, Accept");
 header("Access-Control-Allow-Methods: GET, OPTIONS");

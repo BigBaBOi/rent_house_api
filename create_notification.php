@@ -1,5 +1,9 @@
 <?php
-ini_set('display_errors', 1);
+// ====== [FEATURE 7: NOTIFICATION SYSTEM] ======
+// Tạo thông báo cho hostel (broadcast cho tất cả tenant)
+// Type: 'remind_bill' (nhắc nhở thanh toán) hoặc 'call_tenants' (thông báo chung)
+
+ini_set('display_errors', 0);
 error_reporting(E_ALL);
 
 header("Access-Control-Allow-Origin: *");

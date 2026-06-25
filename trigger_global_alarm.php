@@ -1,4 +1,8 @@
 <?php
+// ====== [FEATURE 10: GLOBAL ALARM SYSTEM] ======
+// Kích hoạt báo động toàn bộ hostel (ứng dụng cho tình huống khẩn cấp)
+// Yêu cầu: triggered_by (user ID), property_id (hostel ID)
+
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Headers: Content-Type, Accept");
 header("Access-Control-Allow-Methods: POST, OPTIONS");

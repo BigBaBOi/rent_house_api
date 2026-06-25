@@ -29,13 +29,22 @@ class Request {
 
         $raw = file_get_contents('php://input');
         if (empty($raw)) {
-            $this->bodyData = [];
-            return [];
+            $this->bodyData = !empty($_POST) ? $_POST : [];
+            return $this->bodyData;
         }
 
         $decoded = json_decode($raw, true);
         if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new InvalidArgumentException('Invalid JSON payload');
+            if (!empty($_POST)) {
+                $this->bodyData = $_POST;
+                return $_POST;
+            }
+            parse_str($raw, $parsed);
+            if (!empty($parsed)) {
+                $this->bodyData = $parsed;
+                return $parsed;
+            }
+            throw new InvalidArgumentException('Invalid payload format');
         }
 
         $this->bodyData = $decoded;

@@ -11,7 +11,10 @@ class UserRegistrationService {
     }
 
     /**
-     * Đăng ký user mới
+     * ====== [FEATURE 1: USER REGISTRATION] ======
+     * Đăng ký user mới - Xử lý đăng ký tài khoản cho Tenant và Owner
+     * - Tenant: Tự động xác thực (status = Verified)
+     * - Owner: Chờ admin duyệt (status = Pending)
      */
     public function register(array $data): array {
         try {
@@ -78,6 +81,7 @@ class UserRegistrationService {
     }
 
     /**
+     * ====== [FEATURE 1B: VERIFICATION CHECK] ======
      * Kiểm tra user đã xác thực chưa
      */
     public function isUserVerified(string $userId): bool {
@@ -89,7 +93,8 @@ class UserRegistrationService {
     }
 
     /**
-     * Đổi mật khẩu
+     * ====== [FEATURE 1C: PASSWORD MANAGEMENT] ======
+     * Đổi mật khẩu - Người dùng có thể thay đổi mật khẩu của tài khoản
      */
     public function changePassword(string $userId, string $oldPassword, string $newPassword): array {
         try {

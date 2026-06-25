@@ -136,6 +136,7 @@ class ApiController {
     }
 
     private function registerUser(array $data, PDO $conn) {
+        // ====== [FEATURE 1A: REGISTER USER HANDLER] ======
         try {
             $result = $this->userRegistrationService->register($data);
             $code = (isset($result['data']['verification_status']) && $result['data']['verification_status'] === 'Pending') ? 202 : 201;
@@ -148,6 +149,7 @@ class ApiController {
     }
 
     private function loginUser(array $data, PDO $conn) {
+        // ====== [FEATURE 1D: LOGIN USER HANDLER] ======
         try {
             $stmt = $conn->prepare('SELECT * FROM Users WHERE email = ?');
             $stmt->execute([$data['email']]);
@@ -164,6 +166,7 @@ class ApiController {
         }
     }
 
+    // ====== [FEATURE 1E: CHANGE PASSWORD HANDLER] ======
     private function changePassword(array $data, PDO $conn) {
         try {
             if (!isset($data['user_id']) || !isset($data['old_password']) || !isset($data['new_password'])) {
@@ -197,7 +200,9 @@ class ApiController {
             Response::json(['status' => 'error', 'message' => 'Lỗi: ' . $e->getMessage()], 500);
         }
     }
-
+// ====== [FEATURE 4: TENANT DASHBOARD] ======
+        // Hiển thị thông tin phòng, hóa đơn chưa thanh toán, thông báo
+        
     private function getTenantDashboard(PDO $conn) {
         $tenantId = $this->request->getQuery('tenant_id');
         if (!$tenantId) {
@@ -270,7 +275,9 @@ class ApiController {
         } catch (PDOException $e) {
             Response::json(['status' => 'error', 'message' => 'Lỗi: ' . $e->getMessage()], 500);
         }
-    }
+    }// ====== [FEATURE 2E: SUBMIT OWNER VERIFICATION] ======
+        // Owner gửi tài liệu xác thực (CMND, ảnh, giấy phép)
+        
 
     private function submitOwnerVerification(array $data, PDO $conn) {
         try {
@@ -285,6 +292,8 @@ class ApiController {
                 Response::json(['status' => 'error', 'message' => 'Không thể gửi yêu cầu xác thực'], 500);
             }
         } catch (Exception $e) {
+        // ====== [FEATURE 3A: ADMIN VERIFY OWNER] ======
+        // Admin phê duyệt xác thực chủ trọ
             Response::json(['status' => 'error', 'message' => 'Lỗi: ' . $e->getMessage()], 500);
         }
     }
@@ -313,6 +322,8 @@ class ApiController {
     }
 
     private function rejectOwner(array $data, PDO $conn) {
+        // ====== [FEATURE 3B: ADMIN REJECT OWNER HANDLER] ======
+        // Admin từ chối xác thực chủ trọ (có thể yêu cầu cung cấp lại tài liệu)
         try {
             if (!isset($data['admin_id']) || !isset($data['verify_id'])) {
                 Response::json(['status' => 'error', 'message' => 'Thiếu admin_id hoặc verify_id'], 400);
@@ -336,6 +347,8 @@ class ApiController {
     }
 
     private function getPendingOwners(array $data, PDO $conn) {
+        // ====== [FEATURE 3C: GET PENDING OWNERS FOR ADMIN DASHBOARD] ======
+        // Lấy danh sách owner chờ xác thực (pagination support)
         try {
             if (!isset($data['admin_id'])) {
                 Response::json(['status' => 'error', 'message' => 'Thiếu admin_id'], 400);
@@ -391,8 +404,23 @@ class ApiController {
             Response::json(['status' => 'success', 'data' => $row]);
         }
 
-        $stmt = $conn->prepare('SELECT ' . implode(',', $fields) . ' FROM `' . $table . '`');
-        $stmt->execute();
+        $sql = 'SELECT ' . implode(',', $fields) . ' FROM `' . $table . '`';
+        $conditions = [];
+        $params = [];
+
+        foreach ($fields as $field) {
+            if (isset($_GET[$field])) {
+                $conditions[] = '`' . $field . '` = ?';
+                $params[] = $_GET[$field];
+            }
+        }
+
+        if (!empty($conditions)) {
+            $sql .= ' WHERE ' . implode(' AND ', $conditions);
+        }
+
+        $stmt = $conn->prepare($sql);
+        $stmt->execute($params);
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         Response::json(['status' => 'success', 'data' => $rows]);
     }

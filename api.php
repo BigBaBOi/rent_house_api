@@ -1,5 +1,9 @@
 <?php
-ini_set('display_errors', 1);
+// ====== [ENTRY POINT: API MAIN ROUTER] ======
+// Khởi tạo tất cả service và điều hướng request đến ApiController
+// CORS headers được bật để hỗ trợ frontend requests
+
+ini_set('display_errors', 0);
 error_reporting(E_ALL);
 
 header('Access-Control-Allow-Origin: *');

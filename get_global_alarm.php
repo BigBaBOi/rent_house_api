@@ -46,7 +46,7 @@ try {
         FROM GlobalAlarms g
         LEFT JOIN Users u ON g.triggered_by = u.user_id
         LEFT JOIN Rooms r ON u.user_id = r.current_tenant_id
-        LEFT JOIN Hostels h ON (r.hostel_id = h.hostel_id OR u.user_id = h.owner_id)
+        LEFT JOIN Hostels h ON g.property_id = h.hostel_id
         $whereClause
         ORDER BY g.id DESC LIMIT 1
     ");

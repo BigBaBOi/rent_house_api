@@ -7,7 +7,9 @@ class OwnerVerificationService {
     }
 
     /**
+     * ====== [FEATURE 2: OWNER VERIFICATION SYSTEM] ======
      * Tạo request xác thực cho chủ trọ
+     * Chủ trọ cần cung cấp: CMND/CCCD, ảnh khuôn mặt, giấy phép kinh doanh
      */
     public function createVerificationRequest(string $userId, array $ownerData): bool {
         try {
@@ -33,6 +35,7 @@ class OwnerVerificationService {
     }
 
     /**
+     * ====== [FEATURE 2B: GET VERIFICATION STATUS] ======
      * Lấy trạng thái xác thực của chủ trọ
      */
     public function getVerificationStatus(string $userId): ?array {
@@ -44,7 +47,9 @@ class OwnerVerificationService {
     }
 
     /**
+     * ====== [FEATURE 2C: UPDATE VERIFICATION STATUS] ======
      * Cập nhật trạng thái xác thực (chỉ admin)
+     * Trạng thái: Pending -> Approved/Rejected
      */
     public function updateVerificationStatus(string $verifyId, string $status, ?string $reviewNote = null, ?string $reviewedBy = null): bool {
         try {
@@ -91,7 +96,9 @@ class OwnerVerificationService {
     }
 
     /**
+     * ====== [FEATURE 2D: GET PENDING VERIFICATIONS] ======
      * Lấy danh sách chủ trọ chờ xác thực
+     * Dùng cho admin dashboard
      */
     public function getPendingVerifications(int $limit = 50, int $offset = 0): array {
         $stmt = $this->conn->prepare(

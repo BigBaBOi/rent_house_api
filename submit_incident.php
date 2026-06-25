@@ -1,4 +1,8 @@
 <?php
+// ====== [FEATURE 8: INCIDENT REPORTING SYSTEM] ======
+// Tenant báo cáo sự cố hoặc khẩn cấp (Fire, Police, Medical)
+// Yêu cầu: tenant_id, description (mô tả sự cố)
+
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Headers: Content-Type, Accept");
 header("Access-Control-Allow-Methods: POST, OPTIONS");
